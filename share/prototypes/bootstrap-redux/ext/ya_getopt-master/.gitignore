@@ -1,0 +1,13 @@
+*~
+test/getopt_test
+test/getopt_test.out
+test/getopt_long_test
+test/getopt_long_test.out
+test/getopt_long_only_test
+test/getopt_long_only_test.out
+test/ya_getopt_test
+test/ya_getopt_test.out
+test/ya_getopt_long_test
+test/ya_getopt_long_test.out
+test/ya_getopt_long_only_test
+test/ya_getopt_long_only_test.out

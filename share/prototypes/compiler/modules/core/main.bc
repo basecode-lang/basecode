@@ -1,0 +1,48 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Language Compiler 
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved
+//
+// This source file is licensed under the terms of the MIT license.
+// See the LICENSE file to learn about this license.
+//
+// ----------------------------------------------------------------------------
+
+#module "core"
+
+#parse "set.bc"
+#parse "array.bc"
+#parse "string.bc"
+#parse "attribute.bc"
+#parse "dictionary.bc"
+
+basecode::compiler::core := ns {
+
+    alloc := fn (size: u64):*any {
+        #assembly {
+            LOAD.QW     I0, SP, #$08;
+            ALLOC.B     I0, I0;
+            PUSH.QW     I0;
+            RTS;         
+        };
+    };
+
+    free := fn (block: *any):u64 {
+        #assembly {            
+            LOAD.QW     I0, SP, #$08;
+            FREE.QW     I0;
+            RTS;
+        };
+    };
+
+    block_size := fn (block: *any):u64 {
+        #assembly {
+            LOAD.QW     I0, SP, #$08;
+            SIZE.QW     I0, I0;
+            PUSH.QW     I0;
+            RTS;
+        };
+    };
+
+};

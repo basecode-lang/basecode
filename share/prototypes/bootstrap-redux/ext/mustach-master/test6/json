@@ -1,0 +1,23 @@
+{
+  "name": "Chris",
+  "value": 10000,
+  "taxed_value": 6000,
+  "in_ca": true,
+  "person": false,
+  "repo": [
+    { "name": "resque", "who": [ { "commiter": "joe" }, { "reviewer": "avrel" }, { "commiter": "william" } ] },
+    { "name": "hub", "who": [ { "commiter": "jack" }, { "reviewer": "avrel" }, { "commiter": "greg" } ]  },
+    { "name": "rip", "who": [ { "reviewer": "joe" }, { "reviewer": "jack" }, { "commiter": "greg" } ]  }
+  ],
+  "person?": { "name": "Jon" },
+  "special": "----{{extra}}----",
+  "extra": 3.14159,
+  "#sharp": "#",
+  "!bang": "!",
+  "/slash": "/",
+  "^circ": "^",
+  "=equal": "=",
+  ":colon": ":",
+  ">greater": ">",
+  "~tilde": "~"
+}

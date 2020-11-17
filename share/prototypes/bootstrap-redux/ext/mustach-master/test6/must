@@ -1,0 +1,43 @@
+Hello {{name}}
+You have just won {{value}} dollars!
+{{#in_ca}}
+Well, {{taxed_value}} dollars, after taxes.
+{{/in_ca}}
+Shown.
+{{#person}}
+  Never shown!
+{{/person}}
+{{^person}}
+  No person
+{{/person}}
+
+{{#repo}}
+  <b>{{name}}</b> reviewers:{{#who}} {{reviewer}}{{/who}} commiters:{{#who}} {{commiter}}{{/who}}
+{{/repo}}
+
+{{#person?}}
+  Hi {{name}}!
+{{/person?}}
+
+{{=%(% %)%=}}
+=====================================
+%(%! gros commentaire %)%
+%(%#repo%)%
+  <b>%(%name%)%</b> reviewers:%(%#who%)% %(%reviewer%)%%(%/who%)% commiters:%(%#who%)% %(%commiter%)%%(%/who%)%
+%(%/repo%)%
+=====================================
+%(%={{ }}=%)%
+ggggggggg
+{{> special}}
+jjjjjjjjj
+end
+
+{{:#sharp}}
+{{:!bang}}
+{{:~tilde}}
+{{:/~0tilde}}
+{{:/~1slash}} see json pointers IETF RFC 6901
+{{:^circ}}
+{{:\=equal}}
+{{::colon}}
+{{:>greater}}

@@ -1,0 +1,7 @@
+{
+  "name": "Chris",
+  "company": "<b>GitHub & Co</b>",
+  "names": ['Chris', 'Kross'],
+  "skills": ['JavaScript', 'PHP', 'Java'],
+  "age": 18
+}

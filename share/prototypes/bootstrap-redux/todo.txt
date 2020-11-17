@@ -1,0 +1,70 @@
+QUESTIONS
+------------
+- how are we going to handle meta-program debugging
+    note: lua_Debug like callback API is probably our best bet
+
+- how to distinguish fixed-length arrays from dynamic arrays
+    without hard coding how dynamic arrays work into the compiler itself.
+
+TASKS
+------------
+- FIX: come up with a better approach to storing per production-type data
+- FIX: introduce scope, block, and parent
+- FIX: how to handle accumulating comments/annotations/directives within a statement
+- FIX: add parse entry point method that creates initial scope, block and sets parent
+- NEW: add remaining production rules to initialize
+
+- FIX: usage of std::string
+- FIX: how to handle expression return values for normal loop termination?
+        // i: s32;
+        //
+        // result := while i < 10 {
+        //   print("i = {i}\n");
+        //   i +:= 1;
+        //   if i > 0 && i % 2 == 0 {
+        //      yield true;
+        //   };
+        // } yield false;
+        //
+
+        // i: s32;
+        //
+        // result := while i < 10 {
+        //   print("i = {i}\n");
+        //   i +:= 1;
+        // } yield i * 2;
+        //
+
+        // x: f32 := 1.5;
+        //
+        // y := if x > 1.0 {
+        //     if x > 3.0 yield x;
+        // } yield x * 2;
+
+        what is result here?
+- FIX: directed_graph_t requires more refactoring to use new collections
+
+DONE
+------------
+- REFACTOR: escaped_string function in transforms needs to be broken out into
+    it's own small state machine.
+- FIX(lexer.cpp): hex, octal, binary parsers should convert to number and check
+    sign bit.
+- FIX: formatters.h needs to check the number_token_t::size to properly
+    output numeric values.
+- FIX(lexer.cpp): number tokenizers should assert that a non-alpha character follows the number.
+    This will prevent situations like: 123myvar: u8 := 1;
+- FIX(lexer.cpp): block comments should encode the nesting via the comment_token_t struct
+    or similar.
+- FIX(lexer.cpp): decimal numbers should properly parse scientific notation
+- REFACTOR: introduce our own trie/trie-map structure that allows us to
+    explicitly navigate the internal trie nodes instead of having to
+    perform string-like "prefix" searches from the root each time.
+- FIX: result_t & result_message_t are using std::string, which is creating copies.
+        need to refactor to use std::string_view and plumb in strings::pool_t
+        to ensure the values are interned.
+- NEW: parser_t helper functions for defining grammar
+- FIX: parser_t helper functions should use the same api, e.g. selector, binding&|nud/led
+- FIX: rename symbol_t to production_t
+- FIX: need to deprecate memory::pool_t and replace it with a series of better
+        allocators.

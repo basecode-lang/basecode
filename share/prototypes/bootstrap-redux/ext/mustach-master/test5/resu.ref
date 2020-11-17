@@ -1,0 +1,60 @@
+=====================================
+from json
+----3.14159----
+=====================================
+not found
+
+=====================================
+without extension first
+must2 == BEGIN
+Hello Chris
+You have just won 10000 dollars!
+
+Well, 6000 dollars, after taxes.
+
+Shown.
+
+
+  No person
+
+must2 == END
+
+=====================================
+last with extension
+must3.mustache == BEGIN
+
+  <b>resque</b> reviewers:  avrel  commiters: joe  william
+
+  <b>hub</b> reviewers:  avrel  commiters: jack  greg
+
+  <b>rip</b> reviewers: joe jack  commiters:   greg
+
+
+
+  Hi Jon!
+
+
+
+=====================================
+
+
+  <b>resque</b> reviewers:  avrel  commiters: joe  william
+
+  <b>hub</b> reviewers:  avrel  commiters: jack  greg
+
+  <b>rip</b> reviewers: joe jack  commiters:   greg
+
+=====================================
+must3.mustache == END
+
+=====================================
+Ensure must3 didn't change specials
+
+
+  Hi Jon!
+
+
+%(%#person?%)%
+  Hi %(%name%)%!
+%(%/person?%)%
+

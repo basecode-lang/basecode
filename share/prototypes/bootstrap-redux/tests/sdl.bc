@@ -1,0 +1,1202 @@
+core :: module("core");
+
+SDL :: ns {
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    Joystick_ID     :: #type s32;
+    Touch_ID        :: #type s64;
+    Finger_ID       :: #type s64;
+    Gesture_ID      :: #type s64;
+    Joystick        :: struct {};
+    Joystick_GUID   :: struct {
+        data: [16]u8;
+    };
+
+    Joystick_Type :: enum {
+        UNKNOWN;
+        GAME_CONTROLLER;
+        WHEEL;
+        ARCADE_STICK;
+        FLIGHT_STICK;
+        DANCE_PAD;
+        GUITAR;
+        DRUM_KIT;
+        ARCADE_PAD;
+        THROTTLE;
+    };
+
+    Joystick_Power_Level :: enum<s32> {
+        UNKNOWN :: -1;
+        EMPTY;
+        LOW;
+        MEDIUM;
+        FULL;
+        WIRED;
+        MAX;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    Scancode :: enum {
+        UNKNOWN         :: 0;
+
+        A               :: 4;
+        B               :: 5;
+        C               :: 6;
+        D               :: 7;
+        E               :: 8;
+        F               :: 9;
+        G               :: 10;
+        H               :: 11;
+        I               :: 12;
+        J               :: 13;
+        K               :: 14;
+        L               :: 15;
+        M               :: 16;
+        N               :: 17;
+        O               :: 18;
+        P               :: 19;
+        Q               :: 20;
+        R               :: 21;
+        S               :: 22;
+        T               :: 23;
+        U               :: 24;
+        V               :: 25;
+        W               :: 26;
+        X               :: 27;
+        Y               :: 28;
+        Z               :: 29;
+
+        _1              :: 30;
+        _2              :: 31;
+        _3              :: 32;
+        _4              :: 33;
+        _5              :: 34;
+        _6              :: 35;
+        _7              :: 36;
+        _8              :: 37;
+        _9              :: 38;
+        _0              :: 39;
+
+        RETURN          :: 40;
+        ESCAPE          :: 41;
+        BACKSPACE       :: 42;
+        TAB             :: 43;
+        SPACE           :: 44;
+
+        MINUS           :: 45;
+        EQUALS          :: 46;
+        LEFTBRACKET     :: 47;
+        RIGHTBRACKET    :: 48;
+        BACKSLASH       :: 49;
+        NONUSHASH       :: 50;
+        SEMICOLON       :: 51;
+        APOSTROPHE      :: 52;
+        GRAVE           :: 53;
+        COMMA           :: 54;
+        PERIOD          :: 55;
+        SLASH           :: 56;
+
+        CAPSLOCK        :: 57;
+
+        F1              :: 58;
+        F2              :: 59;
+        F3              :: 60;
+        F4              :: 61;
+        F5              :: 62;
+        F6              :: 63;
+        F7              :: 64;
+        F8              :: 65;
+        F9              :: 66;
+        F10             :: 67;
+        F11             :: 68;
+        F12             :: 69;
+
+        PRINTSCREEN     :: 70;
+        SCROLLLOCK      :: 71;
+        PAUSE           :: 72;
+        INSERT          :: 73;
+        HOME            :: 74;
+        PAGEUP          :: 75;
+        DELETE          :: 76;
+        END             :: 77;
+        PAGEDOWN        :: 78;
+        RIGHT           :: 79;
+        LEFT            :: 80;
+        DOWN            :: 81;
+        UP              :: 82;
+
+        NUMLOCKCLEAR    :: 83;
+        KP_DIVIDE       :: 84;
+        KP_MULTIPLY     :: 85;
+        KP_MINUS        :: 86;
+        KP_PLUS         :: 87;
+        KP_ENTER        :: 88;
+        KP_1            :: 89;
+        KP_2            :: 90;
+        KP_3            :: 91;
+        KP_4            :: 92;
+        KP_5            :: 93;
+        KP_6            :: 94;
+        KP_7            :: 95;
+        KP_8            :: 96;
+        KP_9            :: 97;
+        KP_0            :: 98;
+        KP_PERIOD       :: 99;
+
+        NONUSBACKSLASH  :: 100;
+        APPLICATION     :: 101;
+        POWER           :: 102;
+        KP_EQUALS       :: 103;
+        F13             :: 104;
+        F14             :: 105;
+        F15             :: 106;
+        F16             :: 107;
+        F17             :: 108;
+        F18             :: 109;
+        F19             :: 110;
+        F20             :: 111;
+        F21             :: 112;
+        F22             :: 113;
+        F23             :: 114;
+        F24             :: 115;
+        EXECUTE         :: 116;
+        HELP            :: 117;
+        MENU            :: 118;
+        SELECT          :: 119;
+        STOP            :: 120;
+        AGAIN           :: 121;
+        UNDO            :: 122;
+        CUT             :: 123;
+        COPY            :: 124;
+        PASTE           :: 125;
+        FIND            :: 126;
+        MUTE            :: 127;
+        VOLUMEUP        :: 128;
+        VOLUMEDOWN      :: 129;
+        KP_COMMA        :: 133;
+        KP_EQUALSAS400  :: 134;
+
+        INTERNATIONAL1  :: 135;
+        INTERNATIONAL2  :: 136;
+        INTERNATIONAL3  :: 137;
+        INTERNATIONAL4  :: 138;
+        INTERNATIONAL5  :: 139;
+        INTERNATIONAL6  :: 140;
+        INTERNATIONAL7  :: 141;
+        INTERNATIONAL8  :: 142;
+        INTERNATIONAL9  :: 143;
+        LANG1           :: 144;
+        LANG2           :: 145;
+        LANG3           :: 146;
+        LANG4           :: 147;
+        LANG5           :: 148;
+        LANG6           :: 149;
+        LANG7           :: 150;
+        LANG8           :: 151;
+        LANG9           :: 152;
+
+        ALTERASE        :: 153;
+        SYSREQ          :: 154;
+        CANCEL          :: 155;
+        CLEAR           :: 156;
+        PRIOR           :: 157;
+        RETURN2         :: 158;
+        SEPARATOR       :: 159;
+        OUT             :: 160;
+        OPER            :: 161;
+        CLEARAGAIN      :: 162;
+        CRSEL           :: 163;
+        EXSEL           :: 164;
+
+        KP_00           :: 176;
+        KP_000          :: 177;
+        THOUSANDSSEPARATOR  :: 178;
+        DECIMALSEPARATOR    :: 179;
+        CURRENCYUNIT    :: 180;
+        CURRENCYSUBUNIT :: 181;
+        KP_LEFTPAREN    :: 182;
+        KP_RIGHTPAREN   :: 183;
+        KP_LEFTBRACE    :: 184;
+        KP_RIGHTBRACE   :: 185;
+        KP_TAB          :: 186;
+        KP_BACKSPACE    :: 187;
+        KP_A            :: 188;
+        KP_B            :: 189;
+        KP_C            :: 190;
+        KP_D            :: 191;
+        KP_E            :: 192;
+        KP_F            :: 193;
+        KP_XOR          :: 194;
+        KP_POWER        :: 195;
+        KP_PERCENT      :: 196;
+        KP_LESS         :: 197;
+        KP_GREATER      :: 198;
+        KP_AMPERSAND    :: 199;
+        KP_DBLAMPERSAND :: 200;
+        KP_VERTICALBAR  :: 201;
+        KP_DBLVERTICALBAR :: 202;
+        KP_COLON        :: 203;
+        KP_HASH         :: 204;
+        KP_SPACE        :: 205;
+        KP_AT           :: 206;
+        KP_EXCLAM       :: 207;
+        KP_MEMSTORE     :: 208;
+        KP_MEMRECALL    :: 209;
+        KP_MEMCLEAR     :: 210;
+        KP_MEMADD       :: 211;
+        KP_MEMSUBTRACT  :: 212;
+        KP_MEMMULTIPLY  :: 213;
+        KP_MEMDIVIDE    :: 214;
+        KP_PLUSMINUS    :: 215;
+        KP_CLEAR        :: 216;
+        KP_CLEARENTRY   :: 217;
+        KP_BINARY       :: 218;
+        KP_OCTAL        :: 219;
+        KP_DECIMAL      :: 220;
+        KP_HEXADECIMAL  :: 221;
+
+        LCTRL           :: 224;
+        LSHIFT          :: 225;
+        LALT            :: 226;
+        LGUI            :: 227;
+        RCTRL           :: 228;
+        RSHIFT          :: 229;
+        RALT            :: 230;
+        RGUI            :: 231;
+
+        MODE            :: 257;
+
+        AUDIONEXT       :: 258;
+        AUDIOPREV       :: 259;
+        AUDIOSTOP       :: 260;
+        AUDIOPLAY       :: 261;
+        AUDIOMUTE       :: 262;
+        MEDIASELECT     :: 263;
+        WWW             :: 264;
+        MAIL            :: 265;
+        CALCULATOR      :: 266;
+        COMPUTER        :: 267;
+        AC_SEARCH       :: 268;
+        AC_HOME         :: 269;
+        AC_BACK         :: 270;
+        AC_FORWARD      :: 271;
+        AC_STOP         :: 272;
+        AC_REFRESH      :: 273;
+        AC_BOOKMARKS    :: 274;
+
+        BRIGHTNESSDOWN  :: 275;
+        BRIGHTNESSUP    :: 276;
+        DISPLAYSWITCH   :: 277;
+
+        KBDILLUMTOGGLE  :: 278;
+        KBDILLUMDOWN    :: 279;
+        KBDILLUMUP      :: 280;
+        EJECT           :: 281;
+        SLEEP           :: 282;
+
+        APP1            :: 283;
+        APP2            :: 284;
+
+        AUDIOREWIND     :: 285;
+        AUDIOFASTFORWARD :: 286;
+
+        NUM_SCANCODES   :: 512;
+    };
+
+    Keycode             :: #type s32;
+    SCANCODE_MASK: u32  :: 1 shl 30;
+    scancode_to_keycode :: proc(k: Scancode):u32 -> k | SCANCODE_MASK;
+
+    K :: enum {
+        UNKNOWN             :: 0;
+
+        BACKSPACE           :: #rune "\b";
+        TAB                 :: #rune "\t";
+        RETURN              :: #rune "\r";
+        ESCAPE              :: #rune "\033";
+        SPACE               :: #rune " ";
+        EXCLAIM             :: #rune "!";
+        QUOTEDBL            :: #rune "\"";
+        HASH                :: #rune "#";
+        DOLLAR              :: #rune "$";
+        PERCENT             :: #rune "%";
+        AMPERSAND           :: #rune "&";
+        QUOTE               :: #rune "'";
+        LEFTPAREN           :: #rune "(";
+        RIGHTPAREN          :: #rune ")";
+        ASTERISK            :: #rune "*";
+        PLUS                :: #rune "+";
+        COMMA               :: #rune ",";
+        MINUS               :: #rune "-";
+        PERIOD              :: #rune ".";
+        SLASH               :: #rune "/";
+        _0                  :: #rune "0";
+        _1                  :: #rune "1";
+        _2                  :: #rune "2";
+        _3                  :: #rune "3";
+        _4                  :: #rune "4";
+        _5                  :: #rune "5";
+        _6                  :: #rune "6";
+        _7                  :: #rune "7";
+        _8                  :: #rune "8";
+        _9                  :: #rune "9";
+        COLON               :: #rune ":";
+        SEMICOLON           :: #rune ";";
+        LESS                :: #rune "<";
+        EQUALS              :: #rune "=";
+        GREATER             :: #rune ">";
+        QUESTION            :: #rune "?";
+        AT                  :: #rune "@";
+
+        LEFTBRACKET         :: #rune "[";
+        BACKSLASH           :: #rune "\\";
+        RIGHTBRACKET        :: #rune "]";
+        CARET               :: #rune "^";
+        UNDERSCORE          :: #rune "_";
+        BACKQUOTE           :: #rune "`";
+        a                   :: #rune "a";
+        b                   :: #rune "b";
+        c                   :: #rune "c";
+        d                   :: #rune "d";
+        e                   :: #rune "e";
+        f                   :: #rune "f";
+        g                   :: #rune "g";
+        h                   :: #rune "h";
+        i                   :: #rune "i";
+        j                   :: #rune "j";
+        k                   :: #rune "k";
+        l                   :: #rune "l";
+        m                   :: #rune "m";
+        n                   :: #rune "n";
+        o                   :: #rune "o";
+        p                   :: #rune "p";
+        q                   :: #rune "q";
+        r                   :: #rune "r";
+        s                   :: #rune "s";
+        t                   :: #rune "t";
+        u                   :: #rune "u";
+        v                   :: #rune "v";
+        w                   :: #rune "w";
+        x                   :: #rune "x";
+        y                   :: #rune "y";
+        z                   :: #rune "z";
+        DELETE              :: #rune "\177";
+
+        CAPSLOCK            :: Scancode.CAPSLOCK | SCANCODE_MASK;
+
+        F1                  :: Scancode.F1 | SCANCODE_MASK;
+        F2                  :: Scancode.F2 | SCANCODE_MASK;
+        F3                  :: Scancode.F3 | SCANCODE_MASK;
+        F4                  :: Scancode.F4 | SCANCODE_MASK;
+        F5                  :: Scancode.F5 | SCANCODE_MASK;
+        F6                  :: Scancode.F6 | SCANCODE_MASK;
+        F7                  :: Scancode.F7 | SCANCODE_MASK;
+        F8                  :: Scancode.F8 | SCANCODE_MASK;
+        F9                  :: Scancode.F9 | SCANCODE_MASK;
+        F10                 :: Scancode.F10 | SCANCODE_MASK;
+        F11                 :: Scancode.F11 | SCANCODE_MASK;
+        F12                 :: Scancode.F12 | SCANCODE_MASK;
+
+        PRINTSCREEN         :: Scancode.PRINTSCREEN | SCANCODE_MASK;
+        SCROLLLOCK          :: Scancode.SCROLLLOCK | SCANCODE_MASK;
+        PAUSE               :: Scancode.PAUSE | SCANCODE_MASK;
+        INSERT              :: Scancode.INSERT | SCANCODE_MASK;
+        HOME                :: Scancode.HOME | SCANCODE_MASK;
+        PAGEUP              :: Scancode.PAGEUP | SCANCODE_MASK;
+        END                 :: Scancode.END | SCANCODE_MASK;
+        PAGEDOWN            :: Scancode.PAGEDOWN | SCANCODE_MASK;
+        RIGHT               :: Scancode.RIGHT | SCANCODE_MASK;
+        LEFT                :: Scancode.LEFT | SCANCODE_MASK;
+        DOWN                :: Scancode.DOWN | SCANCODE_MASK;
+        UP                  :: Scancode.UP | SCANCODE_MASK;
+
+        NUMLOCKCLEAR        :: Scancode.NUMLOCKCLEAR | SCANCODE_MASK;
+        KP_DIVIDE           :: Scancode.KP_DIVIDE | SCANCODE_MASK;
+        KP_MULTIPLY         :: Scancode.KP_MULTIPLY | SCANCODE_MASK;
+        KP_MINUS            :: Scancode.KP_MINUS | SCANCODE_MASK;
+        KP_PLUS             :: Scancode.KP_PLUS | SCANCODE_MASK;
+        KP_ENTER            :: Scancode.KP_ENTER | SCANCODE_MASK;
+        KP_1                :: Scancode.KP_1 | SCANCODE_MASK;
+        KP_2                :: Scancode.KP_2 | SCANCODE_MASK;
+        KP_3                :: Scancode.KP_3 | SCANCODE_MASK;
+        KP_4                :: Scancode.KP_4 | SCANCODE_MASK;
+        KP_5                :: Scancode.KP_5 | SCANCODE_MASK;
+        KP_6                :: Scancode.KP_6 | SCANCODE_MASK;
+        KP_7                :: Scancode.KP_7 | SCANCODE_MASK;
+        KP_8                :: Scancode.KP_8 | SCANCODE_MASK;
+        KP_9                :: Scancode.KP_9 | SCANCODE_MASK;
+        KP_0                :: Scancode.KP_0 | SCANCODE_MASK;
+        KP_PERIOD           :: Scancode.KP_PERIOD | SCANCODE_MASK;
+
+        APPLICATION         :: Scancode.APPLICATION | SCANCODE_MASK;
+        POWER               :: Scancode.POWER | SCANCODE_MASK;
+        KP_EQUALS           :: Scancode.KP_EQUALS | SCANCODE_MASK;
+        F13                 :: Scancode.F13 | SCANCODE_MASK;
+        F14                 :: Scancode.F14 | SCANCODE_MASK;
+        F15                 :: Scancode.F15 | SCANCODE_MASK;
+        F16                 :: Scancode.F16 | SCANCODE_MASK;
+        F17                 :: Scancode.F17 | SCANCODE_MASK;
+        F18                 :: Scancode.F18 | SCANCODE_MASK;
+        F19                 :: Scancode.F19 | SCANCODE_MASK;
+        F20                 :: Scancode.F20 | SCANCODE_MASK;
+        F21                 :: Scancode.F21 | SCANCODE_MASK;
+        F22                 :: Scancode.F22 | SCANCODE_MASK;
+        F23                 :: Scancode.F23 | SCANCODE_MASK;
+        F24                 :: Scancode.F24 | SCANCODE_MASK;
+        EXECUTE             :: Scancode.EXECUTE | SCANCODE_MASK;
+        HELP                :: Scancode.HELP | SCANCODE_MASK;
+        MENU                :: Scancode.MENU | SCANCODE_MASK;
+        SELECT              :: Scancode.SELECT | SCANCODE_MASK;
+        STOP                :: Scancode.STOP | SCANCODE_MASK;
+        AGAIN               :: Scancode.AGAIN | SCANCODE_MASK;
+        UNDO                :: Scancode.UNDO | SCANCODE_MASK;
+        CUT                 :: Scancode.CUT | SCANCODE_MASK;
+        COPY                :: Scancode.COPY | SCANCODE_MASK;
+        PASTE               :: Scancode.PASTE | SCANCODE_MASK;
+        FIND                :: Scancode.FIND | SCANCODE_MASK;
+        MUTE                :: Scancode.MUTE | SCANCODE_MASK;
+        VOLUMEUP            :: Scancode.VOLUMEUP | SCANCODE_MASK;
+        VOLUMEDOWN          :: Scancode.VOLUMEDOWN | SCANCODE_MASK;
+        KP_COMMA            :: Scancode.KP_COMMA | SCANCODE_MASK;
+        KP_EQUALSAS400      :: Scancode.KP_EQUALSAS400 | SCANCODE_MASK;
+
+        ALTERASE            :: Scancode.ALTERASE | SCANCODE_MASK;
+        SYSREQ              :: Scancode.SYSREQ | SCANCODE_MASK;
+        CANCEL              :: Scancode.CANCEL | SCANCODE_MASK;
+        CLEAR               :: Scancode.CLEAR | SCANCODE_MASK;
+        PRIOR               :: Scancode.PRIOR | SCANCODE_MASK;
+        RETURN2             :: Scancode.RETURN2 | SCANCODE_MASK;
+        SEPARATOR           :: Scancode.SEPARATOR | SCANCODE_MASK;
+        OUT                 :: Scancode.OUT | SCANCODE_MASK;
+        OPER                :: Scancode.OPER | SCANCODE_MASK;
+        CLEARAGAIN          :: Scancode.CLEARAGAIN | SCANCODE_MASK;
+        CRSEL               :: Scancode.CRSEL | SCANCODE_MASK;
+        EXSEL               :: Scancode.EXSEL | SCANCODE_MASK;
+
+        KP_00               :: Scancode.KP_00 | SCANCODE_MASK;
+        KP_000              :: Scancode.KP_000 | SCANCODE_MASK;
+        THOUSANDSSEPARATOR  :: Scancode.THOUSANDSSEPARATOR | SCANCODE_MASK;
+        DECIMALSEPARATOR    :: Scancode.DECIMALSEPARATOR | SCANCODE_MASK;
+        CURRENCYUNIT        :: Scancode.CURRENCYUNIT | SCANCODE_MASK;
+        CURRENCYSUBUNIT     :: Scancode.CURRENCYSUBUNIT | SCANCODE_MASK;
+        KP_LEFTPAREN        :: Scancode.KP_LEFTPAREN | SCANCODE_MASK;
+        KP_RIGHTPAREN       :: Scancode.KP_RIGHTPAREN | SCANCODE_MASK;
+        KP_LEFTBRACE        :: Scancode.KP_LEFTBRACE | SCANCODE_MASK;
+        KP_RIGHTBRACE       :: Scancode.KP_RIGHTBRACE | SCANCODE_MASK;
+        KP_TAB              :: Scancode.KP_TAB | SCANCODE_MASK;
+        KP_BACKSPACE        :: Scancode.KP_BACKSPACE | SCANCODE_MASK;
+        KP_A                :: Scancode.KP_A | SCANCODE_MASK;
+        KP_B                :: Scancode.KP_B | SCANCODE_MASK;
+        KP_C                :: Scancode.KP_C | SCANCODE_MASK;
+        KP_D                :: Scancode.KP_D | SCANCODE_MASK;
+        KP_E                :: Scancode.KP_E | SCANCODE_MASK;
+        KP_F                :: Scancode.KP_F | SCANCODE_MASK;
+        KP_XOR              :: Scancode.KP_XOR | SCANCODE_MASK;
+        KP_POWER            :: Scancode.KP_POWER | SCANCODE_MASK;
+        KP_PERCENT          :: Scancode.KP_PERCENT | SCANCODE_MASK;
+        KP_LESS             :: Scancode.KP_LESS | SCANCODE_MASK;
+        KP_GREATER          :: Scancode.KP_GREATER | SCANCODE_MASK;
+        KP_AMPERSAND        :: Scancode.KP_AMPERSAND | SCANCODE_MASK;
+        KP_DBLAMPERSAND     :: Scancode.KP_DBLAMPERSAND | SCANCODE_MASK;
+        KP_VERTICALBAR      :: Scancode.KP_VERTICALBAR | SCANCODE_MASK;
+        KP_DBLVERTICALBAR   :: Scancode.KP_DBLVERTICALBAR | SCANCODE_MASK;
+        KP_COLON            :: Scancode.KP_COLON | SCANCODE_MASK;
+        KP_HASH             :: Scancode.KP_HASH | SCANCODE_MASK;
+        KP_SPACE            :: Scancode.KP_SPACE | SCANCODE_MASK;
+        KP_AT               :: Scancode.KP_AT | SCANCODE_MASK;
+        KP_EXCLAM           :: Scancode.KP_EXCLAM | SCANCODE_MASK;
+        KP_MEMSTORE         :: Scancode.KP_MEMSTORE | SCANCODE_MASK;
+        KP_MEMRECALL        :: Scancode.KP_MEMRECALL | SCANCODE_MASK;
+        KP_MEMCLEAR         :: Scancode.KP_MEMCLEAR | SCANCODE_MASK;
+        KP_MEMADD           :: Scancode.KP_MEMADD | SCANCODE_MASK;
+        KP_MEMSUBTRACT      :: Scancode.KP_MEMSUBTRACT | SCANCODE_MASK;
+        KP_MEMMULTIPLY      :: Scancode.KP_MEMMULTIPLY | SCANCODE_MASK;
+        KP_MEMDIVIDE        :: Scancode.KP_MEMDIVIDE | SCANCODE_MASK;
+        KP_PLUSMINUS        :: Scancode.KP_PLUSMINUS | SCANCODE_MASK;
+        KP_CLEAR            :: Scancode.KP_CLEAR | SCANCODE_MASK;
+        KP_CLEARENTRY       :: Scancode.KP_CLEARENTRY | SCANCODE_MASK;
+        KP_BINARY           :: Scancode.KP_BINARY | SCANCODE_MASK;
+        KP_OCTAL            :: Scancode.KP_OCTAL | SCANCODE_MASK;
+        KP_DECIMAL          :: Scancode.KP_DECIMAL | SCANCODE_MASK;
+        KP_HEXADECIMAL      :: Scancode.KP_HEXADECIMAL | SCANCODE_MASK;
+
+        LCTRL               :: Scancode.LCTRL | SCANCODE_MASK;
+        LSHIFT              :: Scancode.LSHIFT | SCANCODE_MASK;
+        LALT                :: Scancode.LALT | SCANCODE_MASK;
+        LGUI                :: Scancode.LGUI | SCANCODE_MASK;
+        RCTRL               :: Scancode.RCTRL | SCANCODE_MASK;
+        RSHIFT              :: Scancode.RSHIFT | SCANCODE_MASK;
+        RALT                :: Scancode.RALT | SCANCODE_MASK;
+        RGUI                :: Scancode.RGUI | SCANCODE_MASK;
+
+        MODE                :: Scancode.MODE | SCANCODE_MASK;
+
+        AUDIONEXT           :: Scancode.AUDIONEXT | SCANCODE_MASK;
+        AUDIOPREV           :: Scancode.AUDIOPREV | SCANCODE_MASK;
+        AUDIOSTOP           :: Scancode.AUDIOSTOP | SCANCODE_MASK;
+        AUDIOPLAY           :: Scancode.AUDIOPLAY | SCANCODE_MASK;
+        AUDIOMUTE           :: Scancode.AUDIOMUTE | SCANCODE_MASK;
+        MEDIASELECT         :: Scancode.MEDIASELECT | SCANCODE_MASK;
+        WWW                 :: Scancode.WWW | SCANCODE_MASK;
+        MAIL                :: Scancode.MAIL | SCANCODE_MASK;
+        CALCULATOR          :: Scancode.CALCULATOR | SCANCODE_MASK;
+        COMPUTER            :: Scancode.COMPUTER | SCANCODE_MASK;
+        AC_SEARCH           :: Scancode.AC_SEARCH | SCANCODE_MASK;
+        AC_HOME             :: Scancode.AC_HOME | SCANCODE_MASK;
+        AC_BACK             :: Scancode.AC_BACK | SCANCODE_MASK;
+        AC_FORWARD          :: Scancode.AC_FORWARD | SCANCODE_MASK;
+        AC_STOP             :: Scancode.AC_STOP | SCANCODE_MASK;
+        AC_REFRESH          :: Scancode.AC_REFRESH | SCANCODE_MASK;
+        AC_BOOKMARKS        :: Scancode.AC_BOOKMARKS | SCANCODE_MASK;
+
+        BRIGHTNESSDOWN      :: Scancode.BRIGHTNESSDOWN | SCANCODE_MASK;
+        BRIGHTNESSUP        :: Scancode.BRIGHTNESSUP | SCANCODE_MASK;
+        DISPLAYSWITCH       :: Scancode.DISPLAYSWITCH | SCANCODE_MASK;
+        KBDILLUMTOGGLE      :: Scancode.KBDILLUMTOGGLE | SCANCODE_MASK;
+        KBDILLUMDOWN        :: Scancode.KBDILLUMDOWN | SCANCODE_MASK;
+        KBDILLUMUP          :: Scancode.KBDILLUMUP | SCANCODE_MASK;
+        EJECT               :: Scancode.EJECT | SCANCODE_MASK;
+        SLEEP               :: Scancode.SLEEP | SCANCODE_MASK;
+        APP1                :: Scancode.APP1 | SCANCODE_MASK;
+        APP2                :: Scancode.APP2 | SCANCODE_MASK;
+
+        AUDIOREWIND         :: Scancode.AUDIOREWIND | SCANCODE_MASK;
+        AUDIOFASTFORWARD    :: Scancode.AUDIOFASTFORWARD | SCANCODE_MASK;
+    };
+
+    Keymod :: enum {
+        NONE     :: $0000;
+        LSHIFT   :: $0001;
+        RSHIFT   :: $0002;
+        LCTRL    :: $0040;
+        RCTRL    :: $0080;
+        LALT     :: $0100;
+        RALT     :: $0200;
+        LGUI     :: $0400;
+        RGUI     :: $0800;
+        NUM      :: $1000;
+        CAPS     :: $2000;
+        MODE     :: $4000;
+        RESERVED :: $8000;
+    };
+
+    KMOD_CTRL    :: Keymod.LCTRL | Keymod.RCTRL;
+    KMOD_SHIFT   :: Keymod.LSHIFT| Keymod.RSHIFT;
+    KMOD_ALT     :: Keymod.LALT  | Keymod.RALT;
+    KMOD_GUI     :: Keymod.LGUI  | Keymod.RGUI;
+
+    Keysym :: struct {
+        scancode:   Scancode;
+        sym:        Keycode;
+        mod:        u16;
+        unused:     u32;
+    };
+
+    Keyboard_Event :: struct {
+        type:       u32;
+        timestamp:  u32;
+        window_id:  u32;
+        state:      u8;
+        repeat:     u8;
+        padding2:   u8;
+        padding3:   u8;
+        keysym:     Keysym;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    Common_Event :: struct {
+        type:       u32;
+        timestamp:  u32;
+    };
+
+    Window_Event :: struct {
+        type:       u32;
+        timestamp:  u32;
+        window_id:  u32;
+        event:      u8;
+        padding1:   u8;
+        padding2:   u8;
+        padding3:   u8;
+        data1:      s32;
+        data2:      s32;
+    };
+
+    Window_Event_ID :: enum {
+        NONE;
+        SHOWN;
+        HIDDEN;
+        EXPOSED;
+        MOVED;
+        RESIZED;
+        SIZE_CHANGED;
+        MINIMIZED;
+        MAXIMIZED;
+        RESTORED;
+        ENTER;
+        LEAVE;
+        FOCUS_GAINED;
+        FOCUS_LOST;
+        CLOSE;
+        TAKE_FOCUS;
+        HIT_TEST;
+    };
+
+    Text_Editing_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        text:           [32]u8;
+        start:          s32;
+        length:         s32;
+    };
+
+    Text_Input_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        text:           [32]u8;
+    };
+
+    Mouse_Motion_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        which:          u32;
+        state:          u32;
+        x:              s32;
+        y:              s32;
+        xrel:           s32;
+        yrel:           s32;
+    };
+
+    Mouse_Button_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        which:          u32;
+        button:         u8;
+        state:          u8;
+        clicks:         u8;
+        padding:        u8;
+        x:              s32;
+        y:              s32;
+    };
+
+    Mouse_Whell_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        which:          u32;
+        x:              s32;
+        y:              s32;
+        direction:      u32;
+    };
+
+    Joy_Axis_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        axis:           u8;
+        padding1:       u8;
+        padding2:       u8;
+        padding3:       u8;
+        value:          s16;
+        padding4:       u16;
+    };
+
+    Joy_Ball_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        ball:           u8;
+        padding1:       u8;
+        padding2:       u8;
+        padding3:       u8;
+        xrel:           s16;
+        yrel:           s16;
+    };
+
+    Joy_Hat_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        hat:            u8;
+        value:          u8;
+        padding1:       u8;
+        padding2:       u8;
+    };
+
+    Joy_Button_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        button:         u8;
+        state:          u8;
+        padding1:       u8;
+        padding2:       u8;
+    };
+
+    Joy_Device_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          s32;
+    };
+
+    Controler_Axis_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        axis:           u8;
+        padding1:       u8;
+        padding2:       u8;
+        padding3:       u8;
+        value:          s16;
+        padding4:       u16;
+    };
+
+    Controller_Button_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          Joystick_ID;
+        button:         u8;
+        state:          u8;
+        padding1:       u8;
+        padding2:       u8;
+    };
+
+    Controller_Device_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          s32;
+    };
+
+    Audio_Device_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        which:          u32;
+        is_capture:     u8;
+        padding1:       u8;
+        padding2:       u8;
+        padding3:       u8;
+    };
+
+    Touch_Finger_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        touch_id:       Touch_ID;
+        finger_id:      Finger_ID;
+        x:              f32;
+        y:              f32;
+        dx:             f32;
+        dy:             f32;
+        pressure:       f32;
+    };
+
+    Multi_Gesture_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        touch_id:       Touch_ID;
+        d_theta:        f32;
+        d_dist:         f32;
+        x:              f32;
+        y:              f32;
+        num_fingers:    u16;
+        padding:        u16;
+    };
+
+    Dollar_Gesture_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        touch_id:       Touch_ID;
+        gesture_id:     Gesture_ID;
+        num_fingers:    u32;
+        error:          f32;
+        x:              f32;
+        y:              f32;
+    };
+
+    Drop_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        file:           ^u8;
+        window_id:      u32;
+    };
+
+    Quit_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+    };
+
+    OS_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+    };
+
+    User_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        code:           s32;
+        data1:          ^u0;
+        data2:          ^u0;
+    };
+
+    Sys_WM_Msg :: struct {};
+
+    Sys_WM_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        msg:            ^Sys_WM_Msg;
+    };
+
+    Event_Type :: enum {
+        FIRSTEVENT                  :: 0;
+
+        QUIT                        :: $100;
+
+        APP_TERMINATING;
+        APP_LOWMEMORY;
+        APP_WILLENTERBACKGROUND;
+        APP_DIDENTERBACKGROUND;
+        APP_WILLENTERFOREGROUND;
+        APP_DIDENTERFOREGROUND;
+
+        WINDOWEVENT                 :: $200;
+        SYSWMEVENT;
+
+        KEYDOWN                     :: $300;
+        KEYUP;
+        TEXTEDITING;
+        TEXTINPUT;
+        KEYMAPCHANGED;
+
+        MOUSEMOTION                 :: $400;
+        MOUSEBUTTONDOWN;
+        MOUSEBUTTONUP;
+        MOUSEWHEEL;
+
+        JOYAXISMOTION               :: $600;
+        JOYBALLMOTION;
+        JOYHATMOTION;
+        JOYBUTTONDOWN;
+        JOYBUTTONUP;
+        JOYDEVICEADDED;
+        JOYDEVICEREMOVED;
+
+        CONTROLLERAXISMOTION        :: $650;
+        CONTROLLERBUTTONDOWN;
+        CONTROLLERBUTTONUP;
+        CONTROLLERDEVICEADDED;
+        CONTROLLERDEVICEREMOVED;
+        CONTROLLERDEVICEREMAPPED;
+
+        FINGERDOWN                  :: $700;
+        FINGERUP;
+        FINGERMOTION;
+
+        DOLLARGESTURE               :: $800;
+        DOLLARRECORD;
+        MULTIGESTURE;
+
+        CLIPBOARDUPDATE             :: $900;
+
+        DROPFILE                    :: $1000;
+        DROPTEXT;
+        DROPBEGIN;
+        DROPCOMPLETE;
+
+        AUDIODEVICEADDED            :: $1100;
+        AUDIODEVICEREMOVED;
+
+        RENDER_TARGETS_RESET        :: $2000;
+        RENDER_DEVICE_RESET;
+
+        USEREVENT                   :: $8000;
+
+        LASTEVENT                   :: $FFFF;
+    };
+
+    Event :: union {
+        type:       u32;
+        common:     Common_Event;
+        window:     Window_Event;
+        key:        Keyboard_Event;
+        edit:       Text_Editing_Event;
+        text:       Text_Input_Event;
+        motion:     Mouse_Motion_Event;
+        button:     Mouse_Button_Event;
+        wheel:      Mouse_Whell_Event;
+        jaxis:      Joy_Axis_Event;
+        jball:      Joy_Ball_Event;
+        jhat:       Joy_Hat_Event;
+        jbutton:    Joy_Button_Event;
+        jdevice:    Joy_Device_Event;
+        caxis:      Controler_Axis_Event;
+        cbutton:    Controller_Button_Event;
+        cdevice:    Controller_Device_Event;
+        adevice:    Audio_Device_Event;
+        quit:       Quit_Event;
+        user:       User_Event;
+        syswm:      Sys_WM_Event;
+        tfinger:    Touch_Finger_Event;
+        mgesture:   Multi_Gesture_Event;
+        dgesture:   Dollar_Gesture_Event;
+        drop:       Drop_Event;
+        padding:    [56]u8;     // this forces a size of 56 bytes
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    Color :: struct {
+        r: u8;
+        g: u8;
+        b: u8;
+        a: u8;
+    };
+
+    Palette :: struct {
+        ncolors:    s32;
+        colors:     ^Color;
+        version:    u32;
+        refcount:   s32;
+    };
+
+    Pixel_Format :: struct {
+        format:         u32;
+        palette:        ^Palette;
+        bits_per_pixel: u8;
+        bytes_per_pixel:u8;
+        padding:        u16;
+        rmask:          u32;
+        gmask:          u32;
+        bmask:          u32;
+        amask:          u32;
+        rloss:          u8;
+        gloss:          u8;
+        bloss:          u8;
+        aloss:          u8;
+        rshift:         u8;
+        gshift:         u8;
+        bshift:         u8;
+        ashift:         u8;
+        refcount:       s32;
+        next:           ^Pixel_Format;
+    };
+
+    Blit_Map :: struct {};
+
+    Point   :: struct {
+        x: s32;
+        y: s32;
+    };
+
+    Rect    :: struct {
+        x: s32;
+        y: s32;
+        w: s32;
+        h: s32;
+    };
+
+    Window  :: struct {};
+
+    Surface :: struct {
+        flags:      u32;
+        format:     ^Pixel_Format;
+        w:          s32;
+        h:          s32;
+        pitch:      s32;
+        pixels:     ^u8;
+        userdata:   ^u8;
+        locked:     s32;
+        lock_data:  ^u8;
+        clip_rect:  Rect;
+        map:        ^Blit_Map;
+        refcount:   s32;
+    };
+
+    INIT_TIMER:          u32 :: $00000001;
+    INIT_AUDIO:          u32 :: $00000010;
+    INIT_VIDEO:          u32 :: $00000020;
+    INIT_JOYSTICK:       u32 :: $00000200;
+    INIT_HAPTIC:         u32 :: $00001000;
+    INIT_GAMECONTROLLER: u32 :: $00002000;
+    INIT_EVENTS:         u32 :: $00004000;
+    INIT_NOPARACHUTE:    u32 :: $00100000;
+    INIT_EVERYTHING:     u32 :: INIT_TIMER
+                                   | INIT_AUDIO
+                                   | INIT_VIDEO
+                                   | INIT_EVENTS
+                                   | INIT_JOYSTICK
+                                   | INIT_HAPTIC
+                                   | INIT_GAMECONTROLLER;
+
+    WINDOWPOS_UNDEFINED_MASK :: $1FFF0000;
+    WINDOWPOS_UNDEFINED      :: WINDOWPOS_UNDEFINED_MASK;
+
+    WINDOWPOS_CENTERED_MASK  :: $2FFF0000;
+    WINDOWPOS_CENTERED       :: WINDOWPOS_CENTERED_MASK;
+
+    FULLSCREEN:         u32  :: $00000001;
+    OPENGL:             u32  :: $00000002;
+    SHOWN:              u32  :: $00000004;
+    HIDDEN:             u32  :: $00000008;
+    BORDERLESS:         u32  :: $00000010;
+    RESIZABLE:          u32  :: $00000020;
+    MINIMIZED:          u32  :: $00000040;
+    MAXIMIZED:          u32  :: $00000080;
+    INPUT_GRABBED:      u32  :: $00000100;
+    INPUT_FOCUS:        u32  :: $00000200;
+    MOUSE_FOCUS:        u32  :: $00000400;
+    FULLSCREEN_DESKTOP: u32  :: FULLSCREEN | $00001000;
+    FOREIGN:            u32  :: $00000800;
+    ALLOW_HIGHDPI:      u32  :: $00002000;
+    MOUSE_CAPTURE:      u32  :: $00004000;
+    ALWAYS_ON_TOP:      u32  :: $00008000;
+    SKIP_TASKBAR:       u32  :: $00010000;
+    UTILITY:            u32  :: $00020000;
+    TOOLTIP:            u32  :: $00040000;
+    POPUP_MENU:         u32  :: $00080000;
+    VULKAN:             u32  :: $10000000;
+
+    @library "SDL2";
+    #foreign {
+        Quit                :: proc() @alias "SDL_Quit";
+        Delay               :: proc(ms: u32) @alias "SDL_Delay";
+        GetTicks            :: proc(): u32 @alias "SDL_GetTicks";
+        Init                :: proc(flags: u32): s32 @alias "SDL_Init";
+        PollEvent           :: proc(event: ^Event): s32 @alias "SDL_PollEvent";
+        Log                 :: proc(fmt: ^u8, ...values: any) @alias "SDL_Log";
+        DestroyWindow       :: proc(window: ^Window) @alias "SDL_DestroyWindow";
+        UpdateWindowSurface :: proc(window: ^Window): s32 @alias "SDL_UpdateWindowSurface";
+        GetWindowSurface    :: proc(window: ^Window): ^Surface @alias "SDL_GetWindowSurface";
+        MapRGB              :: proc(format: ^Pixel_Format, r: u8, g: u8, b: u8): u32 @alias "SDL_MapRGB";
+        FillRect            :: proc(surface: ^Surface, rect: ^Rect, color: u32): s32 @alias "SDL_FillRect";
+        MapRGBA             :: proc(format: ^Pixel_Format, r: u8, g: u8, b: u8, a: u8): u32 @alias "SDL_MapRGBA";
+        CreateWindow        :: proc(title: ^u8, x: s32, y: s32, w: s32, h: s32, flags: u32): ^Window @alias "SDL_CreateWindow";
+    } @parent_scope;
+};
+
+#run {
+    core::assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
+    
+    window := SDL::CreateWindow(
+        "Test Window", 
+        SDL::WINDOWPOS_CENTERED,
+        SDL::WINDOWPOS_CENTERED,
+        cast<s32>(1280),
+        cast<s32>(1024),
+        SDL::SHOWN);
+    core::assert(window != nil, "window not initialized!");
+
+    surface := SDL::GetWindowSurface(window);
+    core::print("surface.flags := %d\n", surface.flags);
+    core::print("surface.format:= $%016X\n", surface.format);
+    core::print("surface.w     := %d\n", surface.w);
+    core::print("surface.h     := %d\n", surface.h);
+    core::print("surface.pitch := %d\n", surface.pitch);
+
+    running := true;
+    in_window := false;
+
+    delta: s8 := cast<s8>(-1);
+
+    color: SDL::Color;
+    with color {
+        .r := $ff;
+        .g := $ff;
+        .b := $ff;
+        .a := $ff;
+    };
+
+    TARGET_FPS      :: 60;
+    TARGET_FPS_MS   :: 1000 / TARGET_FPS;
+
+    e: SDL::Event;
+    while running {
+        start_time := SDL::GetTicks();
+
+        SDL::PollEvent(address_of(e));
+        switch e.type {
+            case SDL::Event_Type.QUIT => {
+                running := false;
+            };
+            case SDL::Event_Type.WINDOWEVENT => {
+                switch e.window.event {
+                    case SDL::Window_Event_ID.SHOWN => {
+                        SDL::Log("window %d: shown\n", e.window.window_id);
+                    };
+                    case SDL::Window_Event_ID.HIDDEN => {
+                        SDL::Log("window %d: hidden\n", e.window.window_id);
+                    };
+                    case SDL::Window_Event_ID.EXPOSED => {
+                        SDL::Log("window %d: exposed\n", e.window.window_id);
+                    };
+                    case SDL::Window_Event_ID.MOVED => {
+                        SDL::Log(
+                            "window %d: moved -> %dx%d\n",
+                            e.window.window_id,
+                            e.window.data1,
+                            e.window.data2);
+                    };
+                    case SDL::Window_Event_ID.RESIZED => {
+                        SDL::Log("window %d: resized\n", e.window.window_id);
+                    };
+                    case SDL::Window_Event_ID.ENTER => {
+                        if !in_window {
+                            SDL::Log("window %d: enter\n", e.window.window_id);
+                        };
+                        in_window := true;
+                    };
+                    case SDL::Window_Event_ID.LEAVE => {
+                        if in_window {
+                            SDL::Log("window %d: leave\n", e.window.window_id);
+                        };
+                        in_window := false;
+                    };
+                    case SDL::Window_Event_ID.SIZE_CHANGED => {
+                        SDL::Log("window %d: size_changed\n", e.window.window_id);
+                    };
+                };
+            };
+            case SDL::Event_Type.KEYDOWN => {
+                switch e.key.keysym.sym {
+                    case SDL::K.ESCAPE => {
+                        running := false;
+                    };
+                };
+            };
+        };
+
+        SDL::FillRect(
+            surface,
+            nil,
+            SDL::MapRGBA(surface.format, color.r, color.g, color.b, color.a));
+        SDL::UpdateWindowSurface(window);
+
+        with color {
+            .r +:= delta;
+            .g +:= delta;
+            .b +:= delta;
+
+            if .r == $00 || .r == $ff {
+                delta := -delta;
+            };
+        };
+
+        end_time := SDL::GetTicks();
+        frame_duration := end_time - start_time;
+
+        // frame rate cap
+        if frame_duration < TARGET_FPS_MS {
+            delay :: TARGET_FPS_MS - frame_duration;
+            SDL::Delay(delay);
+        };
+    };
+
+    SDL::DestroyWindow(window);
+
+    SDL::Quit();
+};

@@ -1,0 +1,14 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Language Compiler 
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved
+//
+// This source file is licensed under the terms of the MIT license.
+// See the LICENSE file to learn about this license.
+//
+// ----------------------------------------------------------------------------
+
+basecode::compiler::core := ns {
+
+};

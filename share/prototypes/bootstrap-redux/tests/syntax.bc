@@ -1,0 +1,15 @@
+// comment
+
+/*
+ * comment
+ */
+
+temp :: module("temp");
+
+foo: temp :: types :: bar;
+
+import(temp :: types);
+
+basecode :: compiler :: lexer :: ns {
+
+}

@@ -1,0 +1,14 @@
+image: debian:experimental
+
+before_script:
+  - apt-get update -qq && apt-get install -y -qq libjson-c-dev gcc make valgrind
+
+build:
+  script: make
+  artifacts:
+    paths:
+      - mustach
+
+test:
+  script: make test
+

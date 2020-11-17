@@ -1,0 +1,14 @@
+NOTES
+-------------------
+
+TASKS
+-------------------
+- command line arguments
+- arrays
+- string
+- dictionary
+- set
+
+
+COMPLETE
+-------------------

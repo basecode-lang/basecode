@@ -1,0 +1,100 @@
+This are extensions!!
+
+Jon
+25
+
+Fred
+The other Fred.
+
+
+Hello Jon
+
+
+
+
+
+No Harry? Hey Calahan...
+
+
+
+Hello Fred
+
+
+
+
+
+Hello Fred#2
+
+
+
+
+
+Hello Jon, 25 years
+
+
+Hello Henry, 27 years
+
+
+
+Salut Amed, 24 ans
+
+
+
+Jon: /25/25
+
+Henry: /27/
+
+Amed: 24/24/24
+
+
+
+Jon: /25/25
+
+Henry: /27/
+
+Amed: 24/24/24
+
+
+
+ (1) person: { "name": "Jon", "age": 25 }
+   
+     (2) name: Jon
+     
+   
+     (2) age: 25
+     
+   
+
+ (1) person.name: Fred
+   
+
+ (1) person.name=Fred: The other Fred.
+   
+
+ (1) persons: [ { "name": "Jon", "age": 25, "lang": "en" }, { "name": "Henry", "age": 27, "lang": "en" }, { "name": "Amed", "age": 24, "lang": "fr" } ]
+   
+
+ (1) fellows: { "Jon": { "age": 25, "lang": "en" }, "Henry": { "age": 27, "lang": "en" }, "Amed": { "age": 24, "lang": "fr" } }
+   
+     (2) Jon: { "age": 25, "lang": "en" }
+     
+       (3) age: 25
+     
+       (3) lang: en
+     
+   
+     (2) Henry: { "age": 27, "lang": "en" }
+     
+       (3) age: 27
+     
+       (3) lang: en
+     
+   
+     (2) Amed: { "age": 24, "lang": "fr" }
+     
+       (3) age: 24
+     
+       (3) lang: fr
+     
+   
+

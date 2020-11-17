@@ -1,0 +1,4 @@
+[submodule "ext/foundation"]
+	path = ext/foundation
+	branch = develop
+	url = git@github.com:basecode-lang/foundation.git

@@ -1,0 +1,89 @@
+; ----------------------------------------------------------------------------
+; ____                               _
+; |  _\                             | |
+; | |_)| __ _ ___  ___  ___ ___   __| | ___ TM
+; |  _< / _` / __|/ _ \/ __/ _ \ / _` |/ _ \
+; | |_)| (_| \__ \  __/ (_| (_) | (_| |  __/
+; |____/\__,_|___/\___|\___\___/ \__,_|\___|
+;
+; V I R T U A L  M A C H I N E  P R O J E C T
+;
+; Copyright (C) 2020 Jeff Panici
+; All rights reserved.
+;
+; This software source file is licensed under the terms of MIT license.
+; For details, please read the LICENSE file.
+;
+; ----------------------------------------------------------------------------
+
+load:   [!fence][.b|.w|.dw|+.qw][:r0-r11]           r0-r31|sp|fp, r0-r31|sp|fp[, r0-r31|sp|fp|pc|imm32]
+store:  [!fence][.b|.w|.dw|+.qw]                    r0-r31|sp|fp, r0-r31|sp|fp[, r0-r31|sp|fp|pc|imm32]
+copy:   [!fence]                                    r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+fill:   [!fence]                                    r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+move:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc|imm64
+movez:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc|imm64
+moves:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc|imm64
+addi:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+addis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+addf:   [.dw|+.qw][:r0-r11]                         r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+subi:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+subis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+subf:   [.dw|+.qw][:r0-r31]                         r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+muli:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+mulis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+mulf:   [.dw|+.qw][:r0-r11]                         r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+divi:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+divis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+divf:   [.dw|+.qw][:r0-r11]                         r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+modi:   [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+modis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+maddi:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+maddis: [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+maddf:  [.dw|+.qw][:r0-r11]                         r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+negis:  [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc
+negf:   [.dw|+.qw][:r0-r11]                         r0-r31|sp|fp, r0-r31|sp|fp|pc
+shr:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+shl:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+ror:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+rol:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+and:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+or:     [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+xor:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+not:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp|pc
+push:                                               r0-r31|sp|fp|pc|imm32
+pushm:                                              (r0-r31>r0-r31)*|r0-r31|sp|fp|pc
+pop:                                                r0-r31|sp|fp|pc
+popm:                                               (r0-r31<r0-r31)*|r0-r31|sp|fp|pc
+call:                                               r0-r31|sp|fp|imm32
+ret:
+trap:                                               r0-r31|sp|fp|imm32
+jump:                                               r0-r31|sp|fp|imm32
+beq:                                                r0-r31|sp|fp|imm32
+bne:                                                r0-r31|sp|fp|imm32
+bg:                                                 r0-r31|sp|fp|imm32
+bge:                                                r0-r31|sp|fp|imm32
+bl:                                                 r0-r31|sp|fp|imm32
+ble:                                                r0-r31|sp|fp|imm32
+bos:                                                r0-r31|sp|fp|imm32
+boc:                                                r0-r31|sp|fp|imm32
+bcs:                                                r0-r31|sp|fp|imm32
+bcc:                                                r0-r31|sp|fp|imm32
+seq:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sne:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sg:                                                 r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sge:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sl:                                                 r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sle:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+sos:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+soc:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+scs:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+scc:                                                r0-r31|sp|fp, r0-r31|sp|fp|imm32
+cmp:    [.b|.w|.dw|+.qw]                            r0-r31, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+cmps:   [.b|.w|.dw|+.qw]                            r0-r31, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+cmpf:   [.dw|+.qw]                                  r0-r31, r0-r31|sp|fp|pc, r0-r31|sp|fp|pc|imm32
+cas:    [.b|.w|.dw|+.qw][:r0-r11]                   r0-r31|sp|fp, r0-r31|sp|fp
+bis:                                                r0-r31, r0-r31|sp|fp|pc, r0-r31|imm8
+bic:                                                r0-r31, r0-r31|sp|fp|pc, r0-r31|imm8
+bcnt:   [.b|.w|.dw|+.qw]                            r0-r31, r0-r31|sp|fp|pc
+lbcnt:  [.b|.w|.dw|+.qw]                            r0-r31, r0-r31|sp|fp|pc
+exit:

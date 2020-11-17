@@ -1,0 +1,46 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Language Compiler 
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved
+//
+// This source file is licensed under the terms of the MIT license.
+// See the LICENSE file to learn about this license.
+//
+// ----------------------------------------------------------------------------
+
+basecode::compiler::core := ns {
+
+    array := struct {
+        count: u32;
+        capacity: u32;
+        element_size: u16;
+        data: *none;
+
+        @constructor
+        new := fn (element_size: u16, capacity: u32 := 64):array {
+            a: array;
+            a.count := 0;
+            a.capacity := capacity;
+            a.element_size := element_size;
+            a.data = alloc(a.element_size * a.capacity);
+            return a;
+        };
+
+        @destructor
+        delete := fn (self: *array):none {
+            free(self.data);
+        };
+
+        clear := fn (self: *array):none {
+            self.count := 0;
+        };
+
+        add := fn (self: *array, values: ...any):none {
+        };
+
+        insert := fn (self: *array, pos: u32, values: ...any):none {
+        };
+    };
+
+};

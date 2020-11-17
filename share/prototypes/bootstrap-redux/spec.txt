@@ -1,0 +1,786 @@
+The Basecode Programming Language
+=================================
+
+Types
+=====
+
+    Type
+    --------
+    The Type type will be a family:
+
+        Module_Info :: struct {
+            name: String;
+            path: String;
+        };
+
+        Type_Info :: struct {
+            name: String;
+            module: ^Module_Info;
+        };
+
+        Integer_Type_Info :: struct {
+            type:       ^Type_Info import;
+            signed:     bool;
+            min_value:  s64;
+            max_value:  u64;
+        };
+
+        Floating_Point_Type_Info :: struct {
+            type:       ^Type_Info import;
+        };
+
+        Field_Info :: struct {
+            type: Type;
+            name: String;
+        };
+
+        Aggregate_Type_Info :: struct {
+            type:       ^Type_Info import;
+            fields:     []^Field_Info;
+        };
+
+        Type :: family(Integer_Type_Info, Floating_Point_Type, Aggregate_Type_Info);
+
+    Integers
+    --------
+    u0          NOTE: equivalent to "void" in C/C++
+    u8,  s8
+    u16, s16
+    u32, s32
+    u64, s32
+
+    Boolean
+    --------
+    bool
+
+    Floating Point
+    --------------
+    f32
+    f64
+
+    Unicode/Character
+    -----------------
+    Rune
+
+    A rune will most likely be defined as a type alias:
+
+        Rune :: #type s32;
+
+    Variant
+    -------
+    Any
+
+    An Any will most likely be defined as so:
+
+        Any :: struct {
+            type:   ^Type;
+            value:  ^u0;
+        };
+
+    Ranges
+    ------
+    Range<T>
+
+    Slices
+    ------
+    Slice<T>
+
+    Procedures
+    ----------
+    proc
+
+    Aggregate
+    ----------
+    struct
+    union
+
+    Union
+    -----
+    family
+
+    Instances of a family type would be an Any.
+
+    Constants
+    ---------
+    enum
+
+    Pointers
+    --------
+    ^{type}
+
+    Fixed-Size Arrays
+    -----------------
+    [{size}]{type}
+
+    examples:
+        buffer: [32]u8;             // 32 bytes
+        grid:   [32][32]u8;         // a grid of bytes 32 x 32
+        cube:   [32][32][32]u8;     // a cube of bytes 32 x 32 x 32
+
+    Association/Pair
+    ----------------
+    Pair
+
+    notes:
+        A pair most likely will look like this:
+
+        Pair :: struct {
+            key:    Any;
+            value:  Any;
+        };
+
+    example: o: Pair := "oranges" => "are sweet!";
+
+Literals
+========
+
+    Strings
+    -------
+    These are interned and emitted into the read-only data heap
+    by the compiler and a slice<rune> is created to reference the value.  The compiler
+    adds a null byte at the end so that the string is compatible with C library functions.
+
+    For example:
+
+        hello_world :: "Hello World!";
+        #assert(#type hello_world == #type slice<rune>);
+
+    Runes
+    ------
+    Character literals, which are actually utf-8 encoded unicode values, can be created
+    as in this example:
+
+        the_letter_a :: Rune{"A"};
+
+        - or -
+
+        the_letter_a :: #rune "A";
+
+
+    Runes are interned at compile time and emitted into the read-only data heap by
+    the compiler.
+
+    Arrays
+    ------
+    Array literals can be declared like this:
+
+        numbers := []String {"one", "two", "three"};
+        fruits  := [3]String {"apple", "pear", "banana"};
+        cells   := [4][4]s32 {
+            { 0,  0, -1,  0},
+            {-1,  0,  0, -1},
+            { 0,  0, -1, -1},
+            {-1, -1, -1, -1}
+        };
+
+        Or, where the type is specified:
+
+        numbers: [3]String := {"one", "two", "three"};
+
+    Associative Arrays/Maps
+    -----------------------
+    Associative arrays can be created using the pair syntax, e.g.
+
+    roman_numerals: Map<s32, Rune> := {
+        1       => "I",
+        5       => "V",
+        10      => "X",
+        50      => "L",
+        100     => "C",
+        500     => "D",
+        1000    => "M"
+    };
+
+==============================================================================
+
+allocation/memory:
+------------------
+    alloc & free: default to intrinsic but can be overridden
+
+    allocators:
+        heap
+        arena
+        slab/pool
+        temporary
+
+    context:
+        implicit in procedure scope
+
+        allocator
+        logger
+        ?
+
+    new<>:
+        a := new<String>();
+
+    delete:
+        defer delete a;
+
+core types:
+-----------
+    u8 /s8
+    u16/s16
+    u32/s32
+    u64/s64
+
+    bool
+
+    f32/f64
+
+    slice (^u0, u32)
+
+    inclusive_range (u32, u32)
+    exclusive_range (u32, u32)
+
+    arrays:
+        u8[] <-- prototype syntax
+                example: proc(bytes: u8[]) { length_of(bytes) }
+        bytes: u8[10];
+
+        dynamic array idea:
+
+        Array :: struct<T, Size: u32 := 0> {
+            item_type :: #typeof T;
+
+            len: u32 := Size;
+            cap: u32 := Size * size_of(item_type);
+            data: ^T;
+        };
+
+        // as lvalue
+
+        // as rvalue
+        @operator "[]"
+        array_subscript :: proc(rhs: ^Array, index: u32): rhs.item_type {
+            return cast<rhs.item_type>(rhs.data + (index * size_of(rhs.item_type)));
+        };
+
+        names: Array<string>;
+        names[0] := "test";
+
+
+    procedures:
+        type-identity of procedures should be based on their signature.
+        ---------------------------------------------------------------
+
+        unsigned_integers :: family(u8, u16, u32, u64);
+
+        fooer :: proc(a, b: u32): u64 { return a * b; }  <---+
+                 proc<T: unsigned_integers>(a, b: T): u64 { return a * b; } <---+ distinct, until call-site for type-param
+
+                 proc<T: u32>(a, b: T): u64 { return a * b; } <---- this would be an error at parse time
+
+        b :: proc(foo_dooer: fooer, b, c: u32): u64 { return foo_dooer(b, c); }
+
+        variadic arguments (REVISIT):
+        -----------------------------
+
+        Any :: struct {
+            type: ^Type_Info;
+            data: ^u0;
+        }
+
+        print :: proc(fmt: ^String, args: Any...) {
+            arg_values: Any[{compiler specified length}] := ...args;
+
+        };
+
+        lambda syntax:
+        ---------------
+        original lambda: |x, y| return x < y;  SCRATCH THIS
+
+        UFCS:
+        ---------------
+
+        1) static dispatch based on first parameter:
+
+            foo :: struct {
+            };
+
+            bar :: struct {
+            };
+
+            draw :: proc(item: ^foo, x, y: f32) {
+            };
+
+            draw :: proc(item: ^bar, x, y: f32) {
+            };
+
+            f: foo;
+            f.draw(1.5, -16.32);  // draw(address_of(f), 1.5, -16.32);
+
+            b: bar;
+            b.draw(1.5, -16.32);  // draw(address_of(b), 1.5, -16.32);
+
+        2) single dynamic dispatch:
+
+            circle :: struct {
+            };
+
+            rect :: struct {
+            };
+
+            triangle :: struct {
+            };
+
+            shapes :: family(circle, rect, triangle);
+
+            draw :: proc(item: ^circle) {
+            };
+
+            draw :: proc(item: ^rect) {
+            };
+
+            draw :: proc(item: ^triangle) {
+            };
+
+            c: shapes;
+            c := new<circle>();
+            c.draw(); // __shapes__draw(c);
+
+            //
+            // generates a proxy procedure
+            //
+            __shapes__draw :: proc(item: ^shapes) {
+                switch item {
+                    case #typeof circle => {
+                        draw(cast<^circle>(item));
+                    }
+
+                    ...
+
+                }
+            };
+
+    strings:
+        lexical string examples:
+
+        "quoted strings\0"
+
+        {{
+            this is a raw block, which is a string
+        }}
+
+        basecode example #1:
+
+        NOTE: should string literal be a slice or a utf8-type? probably a utf8-ish type is better
+        a: slice := "Hello world!";
+
+        basecode example #2:
+
+        string :: struct {
+            data: ^u8;
+            len: u32;
+            cap: u32;
+            allocator: ^Allocator;
+        };
+
+        a: string;
+        a := "Hello World"; // --> assign_string(a, "Hello World");
+
+                @operator ":="
+                assign_string :: proc(str: ^string, src: slice): ^string {
+                    if str.len < str.cap + src.len {
+                        copy(str.data, src.data, src.len);
+                        str.len := src.len;
+                    } else {
+                        str.cap := next_power_of_2(str.cap + src.len);
+                        str.data = str.allocator.realloc(str.cap);
+                        copy(str.data + str.len, src.data, src.len);
+                        str.len := str.len + src.len;
+                    }
+                    return str;
+                };
+
+    tuples:
+
+        type specification is unified, e.g.
+
+            foo :: tuple(1, 2, 3);
+            bar :: tuple(1, 2, 3);
+
+        the types of the implicit fields here are u8, so the type first declared and bound to
+        foo is reused for bar, but distinct instances.
+
+
+    structs:
+        one type per unique signature .vs. distinct types for each occurrence.
+
+        --------------------------------------
+        namespace/reference approach:
+
+        Point_2D :: struct {
+            x, y: f32;
+        };
+
+        Entity :: struct {
+            id: u32;
+            label: String;
+            pos: Point_2D;
+        };
+
+        Pac_Man :: struct {
+            e: ^Entity import(Entity::*);
+            lives: u8 := 3;
+            score: u32 := 0;
+        };
+
+        pac: Pac_Man;
+
+        --------------------------------------
+        family approach:
+
+        Entity :: struct {
+            Subtypes :: family(Pac_Man, Ghost, Power_Pill);
+
+            id: u32;
+            label: String;
+            pos: Point_2D;
+            subtype: Subtypes import(Pac_Man::*, Ghost::*, Power_Pill:*);
+        };
+
+        pac: Entity;
+        pac.subtype := new<Pac_Man>();
+        pac.lives
+
+        blinky: Entity;
+        blinky.subtype := new<Ghost>();
+        blinky.ai_state
+        blinky.think_callback
+
+    enums:
+        one type per unique signature .vs. distinct types for each occurrence.
+        - ordering constraints need to be opt-in
+
+    unions:
+        one type per unique signature .vs. distinct types for each occurrence.
+        - similar namespace import functionality to struct
+
+    families:
+        one type per unique signature .vs. distinct types for each occurrence.
+
+    ranges:
+        inclusive: 0...10
+        exclusive: 0..10
+
+    modules, module references:
+
+        builtin :: ns {
+            import :: proc(names: ^Namespace..., mod: ^Module_Ref) {
+
+            };
+        }
+
+        foo1.bc:
+            a::b::c::d :: ns {
+                bar :: struct {};
+            };
+
+            g::h::k :: ns {
+                bazzle :: struct {};
+
+                frobnaz_the_bazzle :: proc(b: ^bazzle) {
+
+                };
+            };
+
+        main.bc:
+            #if OS == "Windows"
+                foo :: module("foo1.bc");
+                builtin::import(foo::a::b::c::d);
+            #elif OS == "macOS"
+                foo :: module("foo2.bc");
+                builtin::import(foo::a::b::c::d);
+            #else
+                foo :: module("foo3.bc");
+                builtin::import(foo::a::b::c::d);
+            #endif
+
+            bing: bar;
+
+multiple assignment:
+--------------------
+
+    mod_div :: proc(dividend: f32, divisor: f32): f32, f32 {
+        quotient := dividend / divisor;
+        remainder := dividend % divisor;
+
+        return quotient, remainder;
+    }
+                            *** in tuple example, it becomes ***
+
+    mod_div :: proc(dividend: f32, divisor: f32): tuple(f32, f32) {
+        quotient := dividend / divisor;
+        remainder := dividend % divisor;
+
+        return tuple(quotient, remainder);
+    }
+
+    ///////////////////////////////////
+
+    mod_div :: proc(dividend: f32, divisor: f32): quotient: f32, remainder: f32 {
+        quotient := dividend / divisor;
+        remainder := dividend % divisor;
+    }
+
+                            *** in tuple example, it becomes ***
+
+    mod_div :: proc(dividend: f32, divisor: f32): tuple(quotient: f32, remainder: f32) {
+        quotient := dividend / divisor;
+        remainder := dividend % divisor;
+
+        return tuple(quotient, remainder);
+    }
+
+    =========================================================
+
+    tuple destructuring:
+
+    vector3 :: tuple(x: f32, y: f32, z: f32);
+
+    pos: vector3 := tuple(x := 1.0, y := 2.0, z := -6.0);
+    pos.x := 1.0;
+    pos.y := 2.0;
+    pos.z := -6.0;
+    with pos {
+        .x := 1.0;
+        .y := 2.0;
+        .z := -6.0;
+    };
+
+    // rvalue_temp: tuple(1.0, 2.0, -6.0);
+    // pos.x := rvalue_temp._0;
+    // pos.y := rvalue_temp._1;
+    // pos.z := rvalue_temp._2;
+
+    y, z, x := pos;
+    // y := pos.y;
+    // z := pos.z;
+    // x := pos.x;
+
+    q, r := mod_div(100, 3.14);
+    // q := rvalue_temp._0;
+    // r := rvalue_temp._1;
+
+    =============
+
+    a, b := 6, 5;   // becomes: a, b := tuple(6,5);
+    // rvalue_temp: tuple(6,5);
+    // a := rvalue_temp._0;
+    // b := rvalue_temp._1;
+
+    b, a := a, b;   // becomes: b, a := tuple(a, b);
+    // rvalue_temp: tuple(a, b);
+    // b := rvalue_temp._0;
+    // a := rvalue_temp._1;
+
+automatic pointer deref (no longer necessary):
+----------------------------------------------
+    Quaternion :: struct {
+        x, y, z, w: f32;
+    };
+
+    Player :: struct {
+        lives: u8;
+        score: u64;
+        pos: ^Quaternion;
+        buffer: ^u8;
+    };
+
+    p: Player;
+    p.pos := alloc(size_of(Quaternion));
+    p.buffer := alloc(4096);
+    defer {
+        free p.buffer;
+        free p.pos;
+    };
+
+    p.lives := 3;
+    p.score := 555;
+    p.pos.x := 1.0;
+
+    p: ^Player := alloc(size_of(Player));
+    p.buffer := alloc(4096);
+    defer {
+        free p.buffer;
+        free p;
+    };
+
+    p.lives := 3;
+    p.score := 100000;
+    p.pos.x := 1.0;
+
+labels:
+-------
+    - fix syntax: 'name: to just name:
+    - return might need to support a label
+
+everything is an expression:
+----------------------------
+    - how do break and continue work in these cases?
+    - use return or some other keyword?
+        example: maybe just use break with a value instead of a label
+
+    foo :: proc(a: s32): s32 {
+        flag := if a < 128 {
+            break true;  // or continue
+        };
+
+        return flag ? 32 : 256;
+    };
+
+inline assembly:
+----------------
+
+    struct interp_state_t {
+        uint64_t i[64];
+        double   f[64];
+        uint64_t stack[4096];
+        uint64_t sp;
+    }
+
+    - translate to c evaluations against a pseudo vm state
+    {
+
+    #assembly {{
+        alloc
+        free
+
+        move.dw i13, #$ff7f
+        move.dw i11, #$16
+        shl.qw  i10, i11, i13
+    }};
+
+    }
+
+    void some_scope(context_t* ctx) {
+        ctx->vm_state->i[13] = 0xff7f;
+        ctx->vm_state->i[11] = 0x16;
+        ctx->vm_state->i[10] = ctx->vm_state->i[11] << ctx->vm_state->i[13];
+    }
+
+
+    alloc :: @inline proc(size: u64): ^u0 {
+        temp: ^u0;
+        #assembly {{
+            alloc.b temp, size
+        }};
+        return temp;
+    };
+
+    ===== example of inline translation:
+
+    example:
+    buffer: ^u8 := alloc(4096);
+    defer free(buffer);
+
+    === this might look like, with a private scope:
+
+    buffer: ^u8 := if true {
+        temp: ^u0;
+        #assembly {{
+            alloc.b temp, size
+        }};
+        break temp;
+    };
+
+    === another approach without private scope:
+
+    buffer: ^u8 := nil;
+
+    temp: ^u0;
+    #assembly {{
+        alloc.b temp, size
+    }};
+    buffer := temp;
+
+pointers & storage & ownership:
+-------------------------------
+    pointer is:
+        - an address to some location in memory
+        - and a size
+
+    char*        address in memory & the compiler is looking at one byte at that location
+    int*         address in memory & the compiler is looking at four bytes at that location
+
+    int bar = 64;
+    int* foo = &bar;
+
+    foo++;
+
+    ================================================
+
+    the ^ operator is an alias on the left or dereference on the right
+
+    {
+        bar: ^u64 := alloc(size_of(u64));       // 8
+        bar^ := 100;
+
+        // accessing bar here is bad news
+        print(bar^);
+    }
+
+
+    ===============================================
+
+    resource ideas:
+
+    @resource "foo_critical_rewriter";
+    foo :: struct {
+        name: String;
+        len: u32;
+        flag: bool;
+    };
+
+    foo_critical_rewriter :: proc(ast: ^Any...): ^Ast {
+
+    };
+
+    {
+        foo_res := context.resource_manager.acquire<foo>();
+        foo_ptr := alias_of(foo_res);
+
+        @critical_section {
+            foo_ptr.len := 256;
+            foo_ptr.flag := true;
+        };
+    }
+
+    buffer example:
+    ================
+
+    make_circular_buffer :: proc(size: u64): %u8 {
+        return context.resource_manager.acquire(resource_manager::types::MEMORY, size);
+    };
+
+    buffer_ptr: &u8;
+    {
+        buffer := make_circular_buffer(4096);
+        buffer_ptr := alias_of(buffer);
+    }
+
+    //
+    // ....
+    //
+
+    {
+        buffer := resource_of(buffer_ptr);
+        context.resource_manager.release(buffer);
+
+        // error
+        buffer_ptr := 255;
+    }
+
+
+if expressions:
+---------------
+
+NOTE: Phil says this is Evil(R) and should not be allowed:
+    if true print("true");
+
+Is there any way we can check surrounding context to verify
+scope is what the programmer thinks it should be?
+
+if true {
+    print("true");
+};

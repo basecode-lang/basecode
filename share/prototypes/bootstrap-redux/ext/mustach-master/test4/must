@@ -1,0 +1,58 @@
+This are extensions!!
+
+{{person.name}}
+{{person.age}}
+
+{{person\.name}}
+{{person\.name\=Fred}}
+
+{{#person.name=Jon}}
+Hello Jon
+{{/person.name=Jon}}
+
+{{^person.name=Jon}}
+No Jon? Hey Jon...
+{{/person.name=Jon}}
+
+{{^person.name=Harry}}
+No Harry? Hey Calahan...
+{{/person.name=Harry}}
+
+{{#person\.name=Fred}}
+Hello Fred
+{{/person\.name=Fred}}
+
+{{^person\.name=Fred}}
+No Fred? Hey Fred...
+{{/person\.name=Fred}}
+
+{{#person\.name\=Fred=The other Fred.}}
+Hello Fred#2
+{{/person\.name\=Fred=The other Fred.}}
+
+{{^person\.name\=Fred=The other Fred.}}
+No Fred#2? Hey Fred#2...
+{{/person\.name\=Fred=The other Fred.}}
+
+{{#persons}}
+{{#lang=!fr}}Hello {{name}}, {{age}} years{{/lang=!fr}}
+{{#lang=fr}}Salut {{name}}, {{age}} ans{{/lang=fr}}
+{{/persons}}
+
+{{#persons}}
+{{name}}: {{age=24}}/{{age}}/{{age=!27}}
+{{/persons}}
+
+{{#fellows.*}}
+{{*}}: {{age=24}}/{{age}}/{{age=!27}}
+{{/fellows.*}}
+
+{{#*}}
+ (1) {{*}}: {{.}}
+   {{#*}}
+     (2) {{*}}: {{.}}
+     {{#*}}
+       (3) {{*}}: {{.}}
+     {{/*}}
+   {{/*}}
+{{/*}}

@@ -430,3 +430,6 @@ __pycache__/
 *.xsd.cs
 
 # End of https://www.gitignore.io/api/osx,vim,linux,cmake,clion,windows,visualstudio
+
+cscope.out
+ext/dyncall-1.1.0/test/dynload_plain/x.c

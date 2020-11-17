@@ -1,0 +1,50 @@
+/// somewhere else, in deep libraries
+//pairs :: proc<K, V>(map: ^Map<K, V>): []Pair {
+//    //
+//    //
+//    //
+//};
+
+// scope_t                                          // module level scope
+//     roman_numerals -> entity<identifier_t>
+//     numbers        -> entity<identifier_t>
+//          block_t
+//              ... nodes ...
+//          scope_t
+//              to_roman_numerals   -> entity<identifier_t>
+//                  block_t
+//                      ... nodes ...
+//                  scope_t
+//
+roman_numerals: Map<s32, Rune> := {
+    1       => #rune "I",
+    5       => #rune "V",
+    10      => #rune "X",
+    50      => #rune "L",
+    100     => #rune "C",
+    500     => #rune "D",
+    1000    => #rune "M"
+};
+
+numbers :: ns {
+
+    to_roman_numerals :: proc(num: s32): String {
+        buffer: String;
+        if num == 0 return buffer;
+
+        pairs := roman_numerals.pairs();
+        // pairs := [7]Pair {1 => "I", 5 => "V", 10 => "X", 50 => "L", 100 => "C", 500 => "D", 1000 => "M"}
+        pairs.sort(proc(lhs: Pair, rhs: Pair):Pair return lhs.key > rhs.key);
+
+        while num > 0 {
+            numeral := for _, pair in keys {
+                value := num / pair.key;
+                if value break pair.value;
+            };
+            buffer.append(numeral);
+        }
+
+        return buffer;
+    }
+
+};

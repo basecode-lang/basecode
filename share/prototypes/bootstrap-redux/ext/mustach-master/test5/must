@@ -1,0 +1,23 @@
+=====================================
+from json
+{{> special}}
+=====================================
+not found
+{{> notfound}}
+=====================================
+without extension first
+{{> must2 }}
+=====================================
+last with extension
+{{> must3 }}
+=====================================
+Ensure must3 didn't change specials
+
+{{#person?}}
+  Hi {{name}}!
+{{/person?}}
+
+%(%#person?%)%
+  Hi %(%name%)%!
+%(%/person?%)%
+
